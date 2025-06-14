@@ -6,7 +6,10 @@ exports.generateSummary = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'Файл не найден' });
 
     const text = await parsePDF(req.file.path);
-    const summary = await generateSummaryFromText(text);
+    const userId = req.user._id;
+    const originalFileName = req.file.originalname;
+
+    const summary = await generateSummaryFromText(text, userId, originalFileName);
 
     res.status(200).json({ summary });
   } catch (error) {
