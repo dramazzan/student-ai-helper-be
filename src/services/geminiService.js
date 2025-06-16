@@ -15,7 +15,7 @@ async function generateSummaryFromText(text, userId, originalFileName) {
   });
 
   const response = await result.response;
-  const summaryText = response.text();
+  const summaryText = response.text().trim();
 
   await Summary.create({
     owner: userId,
@@ -26,7 +26,6 @@ async function generateSummaryFromText(text, userId, originalFileName) {
   return summaryText;
 }
 
-// 🧪 Генерация и сохранение теста
 async function generateTestFromText(text, userId, originalFileName) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
@@ -38,7 +37,7 @@ async function generateTestFromText(text, userId, originalFileName) {
   - options: массив из 3–4 вариантов ответа
   - correctAnswer: индекс правильного варианта ответа (начиная с 0)
 
-Верни только JSON без лишнего текста.
+❗ ВАЖНО: Верни только JSON без форматирования, без обрамления в \`\`\`json или другие блоки. Просто JSON.
 
 Учебный материал:
 ---
@@ -52,8 +51,14 @@ ${text}
   const response = await result.response;
   const raw = response.text();
 
+  // 🧹 Удаляем возможные обёртки ```json ... ```
+  const cleaned = raw
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(cleaned);
 
     const newTest = await Test.create({
       owner: userId,
@@ -65,6 +70,7 @@ ${text}
     return newTest;
   } catch (err) {
     console.error('Ошибка парсинга JSON:', err.message);
+    console.error('Ответ от Gemini:', raw);
     throw new Error('Ответ ИИ не является валидным JSON');
   }
 }
