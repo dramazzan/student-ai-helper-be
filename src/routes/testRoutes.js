@@ -29,5 +29,8 @@ router.post('/generate-test', authMiddleware, upload.single('file'), async (req,
     }
 });
 
+router.get('/result/:id', authMiddleware, testController.getTestResult);
+
+
 
 module.exports = router;
