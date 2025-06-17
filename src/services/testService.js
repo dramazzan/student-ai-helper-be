@@ -31,12 +31,6 @@ async function evaluateTest(testId, userId, userAnswers) {
     return { score, total: test.questions.length, result };
 }
 
-module.exports = {
-    evaluateTest,
-};
-
-
-
 async function getTestResult(testResultId, userId) {
     const testResult = await TestResult.findById(testResultId);
 
@@ -81,5 +75,6 @@ async function getTestResult(testResultId, userId) {
 }
 
 module.exports = {
+    evaluateTest,
     getTestResult,
 };
