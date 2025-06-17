@@ -26,10 +26,21 @@ async function generateSummaryFromText(text, userId, originalFileName) {
   return summaryText;
 }
 
-async function generateTestFromText(text, userId, originalFileName) {
+async function generateTestFromText(text, userId, originalFileName, options = {}) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
-  const prompt = `Прочитай следующий учебный материал и составь тест в формате JSON. 
+  const {
+    difficulty = 'средний',           // лёгкий | средний | сложный
+    questionCount = 5,                // количество вопросов
+    questionType = 'тест с выбором',  // можно в будущем: открытые, с одним выбором, с несколькими и т.д.
+  } = options;
+
+  const prompt = `
+Прочитай следующий учебный материал и составь тест в формате JSON. Учитывай следующие параметры:
+- Сложность: ${difficulty}
+- Количество вопросов: ${questionCount}
+- Тип вопросов: ${questionType}
+
 Тест должен содержать:
 - title: название темы
 - questions: массив с вопросами, каждый из которых имеет:
@@ -51,7 +62,6 @@ ${text}
   const response = await result.response;
   const raw = response.text();
 
-  // 🧹 Удаляем возможные обёртки ```json ... ```
   const cleaned = raw
       .replace(/```json/g, '')
       .replace(/```/g, '')
@@ -65,6 +75,8 @@ ${text}
       originalFileName,
       title: parsed.title,
       questions: parsed.questions,
+      difficulty: parsed.difficulty,
+      questionCount: parsed.questionCount,
     });
 
     return newTest;

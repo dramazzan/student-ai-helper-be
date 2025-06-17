@@ -7,8 +7,17 @@ exports.generateTest = async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: 'Файл не найден' });
 
+        const { difficulty = 'средний', numQuestions = 5 } = req.body;
+
         const text = await parsePDF(req.file.path);
-        const testJson = await generateTestFromText(text, req.user._id, req.file.originalname);
+
+        const testJson = await generateTestFromText(
+            text,
+            req.user._id,
+            req.file.originalname,
+            difficulty,
+            numQuestions
+        );
 
         const newTest = new Test({
             owner: req.user._id,
