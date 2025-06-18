@@ -47,6 +47,7 @@ async function generateTestFromText(text, userId, originalFileName, options = {}
   - question: текст вопроса
   - options: массив из 3–4 вариантов ответа
   - correctAnswer: индекс правильного варианта ответа (начиная с 0)
+  - topic: тема вопроса
 
 ❗ ВАЖНО: Верни только JSON без форматирования, без обрамления в \`\`\`json или другие блоки. Просто JSON.
 
@@ -69,6 +70,11 @@ ${text}
 
   try {
     const parsed = JSON.parse(cleaned);
+
+    parsed.questions = parsed.questions.map(q => ({
+      ...q,
+      topic: q.topic || 'Общая тема',
+    }));
 
     const newTest = await Test.create({
       owner: userId,

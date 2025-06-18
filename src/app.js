@@ -4,6 +4,8 @@ const summaryRoutes = require('./routes/summaryRoutes')
 const authRoutes = require('./routes/authRoutes')
 const testRoutes = require('./routes/testRoutes');
 const passingRoutes = require('./routes/testPassingRoutes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
+
 
 const app = express()
 
@@ -17,6 +19,7 @@ app.get('/', (req, res)=>{
 app.use('/api/auth', authRoutes);
 app.use('/api/summary', summaryRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/test/passing' , passingRoutes)
 
 module.exports = app
