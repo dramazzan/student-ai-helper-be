@@ -1,34 +1,40 @@
-const { parsePDF } = require('../utils/fileParser');
-const { generateTestFromText } = require('../services/geminiService');
+const { parsePDF, parseDocx } = require('../utils/fileParser');
+const { generateTestFromText, splitTextIntoThemes } = require('../services/geminiService');
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
+const TestModule = require('../models/TestModule');
+const path = require('path');
 
 exports.generateTest = async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ message: 'Файл не найден' });
+        if (!req.file) {
+            return res.status(400).json({ message: 'Файл не найден' });
+        }
 
-        const { difficulty = 'средний', numQuestions = 5 } = req.body;
+        const ext = path.extname(req.file.originalname).toLowerCase();
 
-        const text = await parsePDF(req.file.path);
+        let text;
+        try {
+            if (ext === '.pdf') {
+                text = await parsePDF(req.file.path);
+            } else if (ext === '.docx') {
+                text = await parseDocx(req.file.path);
+            } else {
+                return res.status(400).json({ message: 'Поддерживаются только PDF и DOCX файлы' });
+            }
+        } catch (err) {
+            console.error('Ошибка чтения файла:', err.message);
+            return res.status(400).json({ message: 'Ошибка при обработке файла. Попробуйте другой.' });
+        }
 
-        const testJson = await generateTestFromText(
-            text,
-            req.user._id,
-            req.file.originalname,
+        const { difficulty, questionCount } = req.body;
+
+        const testJson = await generateTestFromText(text, req.user._id, req.file.originalname, {
             difficulty,
-            numQuestions
-        );
-
-        const newTest = new Test({
-            owner: req.user._id,
-            originalFileName: req.file.originalname,
-            title: testJson.title,
-            questions: testJson.questions,
+            questionCount,
         });
 
-        await newTest.save();
-
-        res.status(200).json({ test: newTest });
+        res.status(200).json({ test: testJson });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Ошибка генерации теста' });
@@ -78,3 +84,48 @@ exports.getTestResult = async (req, res) => {
         res.status(500).json({ message: 'Ошибка получения результата теста' });
     }
 };
+
+
+exports.generateMultipleTests = async (req, res) => {
+    try {
+        const { difficulty, questionCount } = req.body;
+        const userId = req.user._id;
+
+        const text = await parsePDF(req.file.path);
+        const themes = await splitTextIntoThemes(text);
+
+        // Создаём модуль для группировки всех тем
+        const testModule = await TestModule.create({
+            owner: userId,
+            originalFileName: req.file.originalname,
+        });
+
+        const tests = [];
+
+        let week = 1;
+        for (const theme of themes) {
+            const test = await generateTestFromText(theme.content, userId, req.file.originalname, {
+                difficulty,
+                questionCount,
+            });
+
+            test.themeTitle = theme.title;
+            test.week = week;
+            test.moduleId = testModule._id;
+
+            await test.save();
+            tests.push(test);
+            week++;
+        }
+
+        res.status(200).json({
+            message: 'Тесты по темам успешно созданы',
+            moduleId: testModule._id,
+            tests,
+        });
+    } catch (error) {
+        console.error('Ошибка при создании нескольких тестов:', error);
+        res.status(500).json({ message: 'Ошибка при генерации тестов' });
+    }
+};
+

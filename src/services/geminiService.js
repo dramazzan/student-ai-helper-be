@@ -93,7 +93,34 @@ ${text}
   }
 }
 
+async function splitTextIntoThemes(text) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+
+  const prompt = `
+Раздели следующий текст на отдельные темы для учебного курса.
+Верни результат в JSON:
+[
+  {
+    "title": "Название темы",
+    "content": "Текст по этой теме"
+  }
+]
+
+Текст:
+---
+${text}
+  `;
+
+  const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
+  const raw = result.response.text().trim();
+
+  const cleaned = raw.replace(/```json/g, '').replace(/```/g, '');
+  return JSON.parse(cleaned);
+}
+
+
 module.exports = {
   generateSummaryFromText,
   generateTestFromText,
+  splitTextIntoThemes,
 };
