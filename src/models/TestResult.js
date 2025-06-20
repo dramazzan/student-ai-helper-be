@@ -5,6 +5,8 @@ const testResultSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     answers: [{ questionId: String, selectedAnswer: Number }],
     score: Number,
+    totalQuestions: Number,
+    percentage: Number,
     createdAt: { type: Date, default: Date.now },
 });
 
