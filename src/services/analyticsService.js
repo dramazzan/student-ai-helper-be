@@ -1,25 +1,91 @@
 const TestResult = require('../models/TestResult');
 const Test = require('../models/Test');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const Summary = require('../models/Summary');
 
 async function analyzeStudentPerformance(userId) {
-    const results = await TestResult.find({ userId }).populate('testId');
+    const results = await TestResult.find({ userId }).sort({ createdAt: -1 });
+    if (results.length === 0) {
+        return {
+            message: 'Нет данных для анализа',
+        };
+    }
 
-    if (!results.length) throw new Error('Нет данных о тестах пользователя');
+    let totalScore = 0;
+    let totalQuestions = 0;
+    const topicStats = {};
+    const weakTests = [];
 
-    const data = results.map(r => {
-        return `Тест: ${r.testId.title}, Оценка: ${r.score}/${r.testId.questions.length}`;
-    }).join('\n');
+    for (const result of results) {
+        const test = await Test.findById(result.testId);
+        if (!test) continue;
 
-    const prompt = `У ученика есть следующие результаты:\n${data}\n\nКакие темы он знает хорошо, а какие плохо? Что ему стоит повторить? Дай советы, основываясь только на этих данных.`;
+        totalScore += result.score;
+        totalQuestions += test.questions.length;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
-    const result = await model.generateContent({ contents: [{ parts: [{ text: prompt }] }] });
+        if ((result.score / test.questions.length) * 100 < 60) {
+            weakTests.push({
+                title: test.title,
+                score: result.score,
+                total: test.questions.length,
+                date: result.createdAt,
+            });
+        }
 
-    return result.response.text().trim();
+        for (const answer of result.answers) {
+            const question = test.questions.find(q => q._id.toString() === answer.questionId);
+            if (!question) continue;
+
+            const topic = question.topic || 'Общая тема';
+            const isCorrect = answer.selectedAnswer === question.correctAnswer;
+
+            if (!isCorrect) {
+                topicStats[topic] = topicStats[topic] || { mistakes: 0 };
+                topicStats[topic].mistakes++;
+            }
+        }
+    }
+
+    const weakTopics = Object.entries(topicStats)
+        .filter(([_, data]) => data.mistakes >= 2)
+        .map(([topic, data]) => ({
+            topic,
+            mistakes: data.mistakes,
+            recommendation: `Повтори материал по теме: ${topic}`,
+        }));
+
+    // Найдём конспекты по слабым темам
+    const summaries = await Summary.find({ owner: userId });
+    const recommendedSummaries = summaries
+        .filter(summary =>
+            weakTopics.some(topic => summary.content.toLowerCase().includes(topic.topic.toLowerCase()))
+        )
+        .map(summary => ({
+            type: 'summary',
+            topic: weakTopics.find(wt =>
+                summary.content.toLowerCase().includes(wt.topic.toLowerCase())
+            )?.topic || 'Общая тема',
+            content: summary.content.slice(0, 300) + '...',
+        }));
+
+    // Прогресс и мотивация
+    const averageScore = Math.round((totalScore / totalQuestions) * 100);
+    const progressPercent = Math.min(100, Math.round((results.length / 20) * 100)); // из 20 тестов
+
+    const message = averageScore > 80
+        ? 'Отличная работа! Продолжай в том же духе.'
+        : averageScore > 50
+            ? 'Хорошо, но есть куда расти. Обрати внимание на слабые темы.'
+            : 'Не сдавайся! Учёба — это процесс. Повтори слабые темы.';
+
+    return {
+        totalTestsTaken: results.length,
+        averageScore,
+        progressPercent,
+        weakTopics,
+        lowScoreTests: weakTests,
+        recommendations: recommendedSummaries,
+        motivation: message,
+    };
 }
 
 module.exports = { analyzeStudentPerformance };

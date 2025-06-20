@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware');
 const analyticsController = require('../controllers/analyticsController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/student', authMiddleware, analyticsController.getStudentAnalytics);
+router.get('/', authMiddleware, analyticsController.getStudentAnalytics);
 
 module.exports = router;
