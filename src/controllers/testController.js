@@ -4,6 +4,7 @@ const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
 const path = require('path');
+const {parseFile} = require('../utils/fileParser')
 
 exports.generateTest = async (req, res) => {
     try {
@@ -85,24 +86,27 @@ exports.getTestResult = async (req, res) => {
     }
 };
 
-
 exports.generateMultipleTests = async (req, res) => {
     try {
         const { difficulty, questionCount } = req.body;
         const userId = req.user._id;
 
-        const text = await parsePDF(req.file.path);
+        const text = await parseFile(req.file.path); // <--- универсальный парсер (PDF или DOCX)
         const themes = await splitTextIntoThemes(text);
 
-        // Создаём модуль для группировки всех тем
+        if (!themes || themes.length === 0) {
+            return res.status(400).json({ message: 'Темы не найдены в файле' });
+        }
+
+        // Создаём модуль (группу тестов)
         const testModule = await TestModule.create({
             owner: userId,
             originalFileName: req.file.originalname,
         });
 
         const tests = [];
-
         let week = 1;
+
         for (const theme of themes) {
             const test = await generateTestFromText(theme.content, userId, req.file.originalname, {
                 difficulty,
@@ -119,13 +123,13 @@ exports.generateMultipleTests = async (req, res) => {
         }
 
         res.status(200).json({
-            message: 'Тесты по темам успешно созданы',
+            message: 'Тесты успешно созданы по темам',
             moduleId: testModule._id,
             tests,
         });
+
     } catch (error) {
-        console.error('Ошибка при создании нескольких тестов:', error);
-        res.status(500).json({ message: 'Ошибка при генерации тестов' });
+        console.error('Ошибка при создании нескольких тестов:', error.message);
+        res.status(500).json({ message: 'Ошибка при генерации тестов', error: error.message });
     }
 };
-

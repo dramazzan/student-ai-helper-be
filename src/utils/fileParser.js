@@ -1,24 +1,40 @@
 const fs = require('fs');
+const path = require('path');
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
-const path = require('path');
 
 async function parseFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
 
+  // DOCX обработка
   if (ext === '.docx') {
-    const buffer = fs.readFileSync(filePath);
-    const result = await mammoth.extractRawText({ buffer });
-    return result.value;
+    try {
+      const buffer = fs.readFileSync(filePath);
+      const result = await mammoth.extractRawText({ buffer });
+      if (!result.value || result.value.trim().length === 0) {
+        throw new Error('DOCX не содержит текста');
+      }
+      return result.value.trim();
+    } catch (error) {
+      throw new Error('Ошибка чтения DOCX: ' + error.message);
+    }
   }
 
+  // PDF обработка
   if (ext === '.pdf') {
-    const buffer = fs.readFileSync(filePath);
-    const data = await pdfParse(buffer);
-    return data.text;
+    try {
+      const buffer = fs.readFileSync(filePath);
+      const data = await pdfParse(buffer);
+      if (!data.text || data.text.trim().length === 0) {
+        throw new Error('PDF не содержит читаемого текста');
+      }
+      return data.text.trim();
+    } catch (error) {
+      throw new Error('Ошибка чтения PDF: ' + error.message);
+    }
   }
 
-  throw new Error('Неподдерживаемый формат файла');
+  throw new Error('Неподдерживаемый формат файла: ' + ext);
 }
 
 module.exports = { parseFile };
