@@ -91,14 +91,13 @@ exports.generateMultipleTests = async (req, res) => {
         const { difficulty, questionCount } = req.body;
         const userId = req.user._id;
 
-        const text = await parseFile(req.file.path); // <--- универсальный парсер (PDF или DOCX)
+        const text = await parseFile(req.file.path);
         const themes = await splitTextIntoThemes(text);
 
         if (!themes || themes.length === 0) {
             return res.status(400).json({ message: 'Темы не найдены в файле' });
         }
 
-        // Создаём модуль (группу тестов)
         const testModule = await TestModule.create({
             owner: userId,
             originalFileName: req.file.originalname,
@@ -125,6 +124,7 @@ exports.generateMultipleTests = async (req, res) => {
         res.status(200).json({
             message: 'Тесты успешно созданы по темам',
             moduleId: testModule._id,
+            testCount: tests.length,
             tests,
         });
 
