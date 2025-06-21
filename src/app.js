@@ -7,6 +7,7 @@ const passingRoutes = require('./routes/testPassingRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const progressRoutes = require('./routes/progressRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const testDownloadRoutes = require('./routes/testDownloadRoutes');
 
 const app = express()
 
@@ -24,5 +25,6 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/test/passing' , passingRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/analytics' , analyticsRoutes)
+app.use('/api/tests' , testDownloadRoutes )
 
 module.exports = app
