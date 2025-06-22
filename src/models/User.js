@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['student', 'teacher'], default: 'student' },
   summaries: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Summary' }],
   tests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Test' }],
+  emailToken: { type: String },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String,
+  verifyTokenExpires: Date,
 });
 
 module.exports = mongoose.model('User', userSchema);
