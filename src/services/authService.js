@@ -63,6 +63,8 @@ exports.verifyEmail = async (token) => {
 
   return { message: "Email успешно подтверждён. Теперь вы можете войти." };
 };
+
+
 exports.loginUser = async ({ email, password }) => {
   const user = await User.findOne({ email });
   if (!user) {
@@ -85,5 +87,6 @@ exports.loginUser = async ({ email, password }) => {
   }
 
   const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  return { token };
+
+  return { token  , user: {id: user.id , email: user.email , username: user.name}};
 };
