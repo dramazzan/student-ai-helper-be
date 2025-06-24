@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async (email, token) => {
-    const link = `${process.env.CLIENT_URL}/api/auth/verify-email?token=${token}`;
+    const link = `${process.env.CLIENT_URL}/auth/verify-email?token=${token}`;
 
     await transporter.sendMail({
         to: email,

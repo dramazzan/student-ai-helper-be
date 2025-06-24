@@ -14,14 +14,12 @@ exports.registerUser = async ({ name, email, password }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Создаём JWT токен с данными пользователя
   const emailToken = jwt.sign(
       { name, email, password: hashedPassword },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
   );
 
-  // Отправляем письмо
   try {
     await sendVerificationEmail(email, emailToken);
   } catch (err) {
