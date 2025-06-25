@@ -41,3 +41,13 @@ exports.login = async (req, res) => {
         res.status(error.status || 500).json({ message: error.message });
     }
 };
+
+
+exports.getUserData = async (req, res) =>{
+    try{
+        const user = await authService.getUserData(req.user)
+        res.status(200).json(user)
+    }catch(error){
+        res.status(error.status || 500).json({ message: error.message });
+    }
+}

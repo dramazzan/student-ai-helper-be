@@ -41,6 +41,7 @@ exports.verifyEmail = async (token) => {
     const error = new Error("Недействительный или просроченный токен");
     error.status = 400;
     throw error;
+
   }
 
   const existing = await User.findOne({ email: payload.email });
@@ -87,4 +88,24 @@ exports.loginUser = async ({ email, password }) => {
   const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   return { token  , user: {id: user.id , email: user.email , username: user.name}};
+};
+
+
+
+exports.getUserData = async (user) => {
+  if (!user || !user._id) {
+    const error = new Error('Неверные данные пользователя');
+    error.status = 400;
+    throw error;
+  }
+
+  const userData = await User.findById(user._id).lean();
+
+  if (!userData) {
+    const error = new Error('Пользователь не найден');
+    error.status = 404;
+    throw error;
+  }
+
+  return userData;
 };
