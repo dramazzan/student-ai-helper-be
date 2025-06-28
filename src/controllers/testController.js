@@ -1,4 +1,3 @@
-const { parsePDF, parseDocx } = require('../utils/fileParser');
 const { generateTestFromText, splitTextIntoThemes } = require('../services/geminiService');
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
@@ -17,9 +16,9 @@ exports.generateTest = async (req, res) => {
         let text;
         try {
             if (ext === '.pdf') {
-                text = await parsePDF(req.file.path);
+                text = await parseFile(req.file.path);
             } else if (ext === '.docx') {
-                text = await parseDocx(req.file.path);
+                text = await parseFile(req.file.path);
             } else {
                 return res.status(400).json({ message: 'Поддерживаются только PDF и DOCX файлы' });
             }

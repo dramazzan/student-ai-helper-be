@@ -7,6 +7,7 @@ const testSchema = new mongoose.Schema({
   themeTitle: { type: String }, // название темы (например, "Неделя 1: HTML-основы")
   moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'TestModule' }, // связь с модулем
   week: { type: Number }, // номер недели или порядковый номер темы
+  testType: {type: String , required: true, enum:['normal' , 'multi']},
 
   difficulty: {
     type: String,

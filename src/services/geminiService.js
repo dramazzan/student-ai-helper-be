@@ -30,9 +30,10 @@ async function generateTestFromText(text, userId, originalFileName, options = {}
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
   const {
-    difficulty = 'средний',           // лёгкий | средний | сложный
-    questionCount = 5,                // количество вопросов
-    questionType = 'тест с выбором',  // можно в будущем: открытые, с одним выбором, с несколькими и т.д.
+    difficulty = 'средний',
+    questionCount = 5,
+    questionType = 'тест с выбором',
+    testType= 'normal',
   } = options;
 
   const prompt = `
@@ -40,6 +41,7 @@ async function generateTestFromText(text, userId, originalFileName, options = {}
 - Сложность: ${difficulty}
 - Количество вопросов: ${questionCount}
 - Тип вопросов: ${questionType}
+- Тип теста: ${testType}
 
 Тест должен содержать:
 - title: название темы
@@ -83,6 +85,7 @@ ${text}
       questions: parsed.questions,
       difficulty: parsed.difficulty,
       questionCount: parsed.questionCount,
+      testType: options.testType || 'normal',
     });
 
     return newTest;
