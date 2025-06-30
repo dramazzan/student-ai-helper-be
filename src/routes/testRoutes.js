@@ -49,4 +49,8 @@ router.post('/generate-multi', authMiddleware, upload.single('file'), async (req
     }
 });
 
+router.get('/normal', authMiddleware, testController.getNormalTests);
+router.get('/multi', authMiddleware, testController.getMultiTests);
+
+
 module.exports = router;
