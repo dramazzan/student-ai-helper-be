@@ -4,6 +4,7 @@ const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
 const path = require('path');
 const {parseFile} = require('../utils/fileParser')
+const {getMultiTestsByUser , getNormalTestsByUser} = require('../services/testService');
 
 exports.generateTest = async (req, res) => {
     try {
@@ -109,6 +110,7 @@ exports.generateMultipleTests = async (req, res) => {
             const test = await generateTestFromText(theme.content, userId, req.file.originalname, {
                 difficulty,
                 questionCount,
+                testType: "multi"
             });
 
             test.themeTitle = theme.title;
@@ -130,5 +132,24 @@ exports.generateMultipleTests = async (req, res) => {
     } catch (error) {
         console.error('Ошибка при создании нескольких тестов:', error.message);
         res.status(500).json({ message: 'Ошибка при генерации тестов', error: error.message });
+    }
+};
+
+
+exports.getNormalTests = async (req, res) => {
+    try {
+        const tests = await getNormalTestsByUser(req.user._id);
+        res.status(200).json({ tests });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.getMultiTests = async (req, res) => {
+    try {
+        const tests = await getMultiTestsByUser(req.user._id);
+        res.status(200).json({ tests });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 };

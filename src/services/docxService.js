@@ -6,7 +6,6 @@ const { Document, Packer, Paragraph, TextRun } = require('docx');
 async function generateDocxFromTest(test, fileName) {
     const paragraphs = [];
 
-    // Заголовок теста
     paragraphs.push(
         new Paragraph({
             children: [new TextRun({ text: test.title, bold: true, size: 32 })],
@@ -14,7 +13,6 @@ async function generateDocxFromTest(test, fileName) {
         })
     );
 
-    // Вопросы и ответы
     test.questions.forEach((q, index) => {
         paragraphs.push(new Paragraph({ text: `${index + 1}. ${q.question}`, spacing: { after: 200 } }));
 
@@ -23,10 +21,9 @@ async function generateDocxFromTest(test, fileName) {
             paragraphs.push(new Paragraph(`   ${letter}) ${opt}`));
         });
 
-        paragraphs.push(new Paragraph('')); // пустая строка между вопросами
+        paragraphs.push(new Paragraph(''));
     });
 
-    // ✅ Создание документа с секциями
     const doc = new Document({
         creator: 'Student AI Helper',
         title: test.title,

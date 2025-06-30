@@ -53,7 +53,6 @@ async function analyzeStudentPerformance(userId) {
             recommendation: `Повтори материал по теме: ${topic}`,
         }));
 
-    // Найдём конспекты по слабым темам
     const summaries = await Summary.find({ owner: userId });
     const recommendedSummaries = summaries
         .filter(summary =>
@@ -67,7 +66,6 @@ async function analyzeStudentPerformance(userId) {
             content: summary.content.slice(0, 300) + '...',
         }));
 
-    // Прогресс и мотивация
     const averageScore = Math.round((totalScore / totalQuestions) * 100);
     const progressPercent = Math.min(100, Math.round((results.length / 20) * 100)); // из 20 тестов
 

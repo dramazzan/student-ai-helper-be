@@ -74,7 +74,29 @@ async function getTestResult(testResultId, userId) {
     };
 }
 
+async function getNormalTestsByUser(userId) {
+    const tests = await Test.find({ owner: userId, testType: 'normal' }).sort({ createdAt: -1 });
+
+    if (!tests || tests.length === 0) {
+        throw new Error('Обычные тесты не найдены');
+    }
+
+    return tests;
+}
+
+async function getMultiTestsByUser(userId) {
+    const tests = await Test.find({ owner: userId, testType: 'multi' }).sort({ createdAt: -1 });
+
+    if (!tests || tests.length === 0) {
+        throw new Error('Мульти-тесты не найдены');
+    }
+
+    return tests;
+}
+
 module.exports = {
     evaluateTest,
     getTestResult,
+    getNormalTestsByUser,
+    getMultiTestsByUser,
 };

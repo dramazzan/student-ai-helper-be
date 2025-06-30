@@ -6,7 +6,6 @@ const pdfParse = require('pdf-parse');
 async function parseFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
 
-  // DOCX обработка
   if (ext === '.docx') {
     try {
       const buffer = fs.readFileSync(filePath);
@@ -20,7 +19,6 @@ async function parseFile(filePath) {
     }
   }
 
-  // PDF обработка
   if (ext === '.pdf') {
     try {
       const buffer = fs.readFileSync(filePath);
