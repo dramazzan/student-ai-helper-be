@@ -3,19 +3,19 @@ const mongoose = require('mongoose');
 const testSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   originalFileName: { type: String },
-  title: { type: String, required: true }, // общий заголовок
-  themeTitle: { type: String }, // название темы (например, "Неделя 1: HTML-основы")
-  moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'TestModule' }, // связь с модулем
-  week: { type: Number }, // номер недели или порядковый номер темы
+  title: { type: String, required: true },
+  themeTitle: { type: String },
+  moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'TestModule' },
+  week: { type: Number },
   testType: {type: String , required: true, enum:['normal' , 'multi']},
-
+  questionCount: { type: Number },
   difficulty: {
     type: String,
     enum: ['легкий', 'средний', 'трудный'],
     default: 'средний',
   },
 
-  questionCount: { type: Number },
+
 
   questions: [
     {

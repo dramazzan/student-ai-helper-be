@@ -4,7 +4,7 @@ const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
 const path = require('path');
 const {parseFile} = require('../utils/fileParser')
-const {getMultiTestsByUser , getNormalTestsByUser} = require('../services/testService');
+const {getMultiTestsByUser , getNormalTestsByUser, getTestsByModuleId, getTestModules} = require('../services/testService');
 
 exports.generateTest = async (req, res) => {
     try {
@@ -98,16 +98,20 @@ exports.generateMultipleTests = async (req, res) => {
             return res.status(400).json({ message: 'Темы не найдены в файле' });
         }
 
+        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+        const fileNameWithoutExtension = path.basename(originalName, path.extname(originalName));
+
         const testModule = await TestModule.create({
             owner: userId,
-            originalFileName: req.file.originalname,
+            originalFileName: fileNameWithoutExtension,
+
         });
 
         const tests = [];
         let week = 1;
 
         for (const theme of themes) {
-            const test = await generateTestFromText(theme.content, userId, req.file.originalname, {
+            const test = await generateTestFromText(theme.content, userId, originalName, {
                 difficulty,
                 questionCount,
                 testType: "multi"
@@ -139,17 +143,44 @@ exports.generateMultipleTests = async (req, res) => {
 exports.getNormalTests = async (req, res) => {
     try {
         const tests = await getNormalTestsByUser(req.user._id);
-        res.status(200).json({ tests });
+        res.status(200).json({ tests }); // всегда возвращаем 200 OK
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error('Ошибка при получении обычных тестов:', err.message);
+        res.status(500).json({ message: 'Ошибка сервера при получении обычных тестов' });
     }
 };
+
 
 exports.getMultiTests = async (req, res) => {
     try {
         const tests = await getMultiTestsByUser(req.user._id);
         res.status(200).json({ tests });
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error('Ошибка при получении мульти-тестов:', err.message);
+        res.status(500).json({ message: 'Ошибка сервера при получении мульти-тестов' });
+    }
+};
+
+
+
+exports.getTestsByModuleId = async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const tests = await getTestsByModuleId(moduleId);
+        res.status(200).json({ tests });
+    } catch (error) {
+        console.error('Ошибка при получении тестов по модулю:', error.message);
+        res.status(500).json({ message: 'Ошибка сервера при получении тестов' });
+    }
+};
+
+
+exports.getTestModules = async (req, res) => {
+    try {
+        const modules = await getTestModules(req.user._id);
+        res.status(200).json({ modules });
+    } catch (err) {
+        console.error('Ошибка при получении модулей:', err.message);
+        res.status(500).json({ message: 'Ошибка сервера при получении модулей' });
     }
 };

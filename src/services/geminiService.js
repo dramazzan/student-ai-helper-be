@@ -83,8 +83,8 @@ ${text}
       originalFileName,
       title: parsed.title,
       questions: parsed.questions,
-      difficulty: parsed.difficulty,
-      questionCount: parsed.questionCount,
+      difficulty: options.difficulty || 'средний',
+      questionCount: options.questionCount || parsed.questions.length,
       testType: options.testType || 'normal',
     });
 

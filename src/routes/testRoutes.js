@@ -11,8 +11,8 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        const filename = Date.now() + path.extname(file.originalname);
-        cb(null, filename);
+        const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        cb(null, Date.now() + '-' + decodedName);
     }
 });
 
@@ -51,6 +51,7 @@ router.post('/generate-multi', authMiddleware, upload.single('file'), async (req
 
 router.get('/normal', authMiddleware, testController.getNormalTests);
 router.get('/multi', authMiddleware, testController.getMultiTests);
-
+router.get('/module/:moduleId' , authMiddleware , testController.getTestsByModuleId)
+router.get('/module' , authMiddleware , testController.getTestModules)
 
 module.exports = router;

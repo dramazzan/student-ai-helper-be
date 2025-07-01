@@ -1,4 +1,5 @@
 const Test = require('../models/Test');
+const TestModule = require('../models/TestModule');
 const TestResult = require('../models/TestResult');
 
 async function evaluateTest(testId, userId, userAnswers) {
@@ -75,28 +76,33 @@ async function getTestResult(testResultId, userId) {
 }
 
 async function getNormalTestsByUser(userId) {
-    const tests = await Test.find({ owner: userId, testType: 'normal' }).sort({ createdAt: -1 });
-
-    if (!tests || tests.length === 0) {
-        throw new Error('Обычные тесты не найдены');
-    }
-
-    return tests;
+    return await Test.find({ owner: userId, testType: 'normal' }).sort({ createdAt: -1 });
 }
 
 async function getMultiTestsByUser(userId) {
-    const tests = await Test.find({ owner: userId, testType: 'multi' }).sort({ createdAt: -1 });
-
-    if (!tests || tests.length === 0) {
-        throw new Error('Мульти-тесты не найдены');
-    }
-
-    return tests;
+    return await Test.find({ owner: userId, testType: 'multi' }).sort({ createdAt: -1 });
 }
+
+
+async function getTestsByModuleId(moduleId) {
+    return await Test.find({ moduleId, testType: 'multi' }).sort({ createdAt: -1 });
+}
+
+async function getTestModules(userId) {
+    return await TestModule.find({ owner: userId });
+}
+
 
 module.exports = {
     evaluateTest,
     getTestResult,
     getNormalTestsByUser,
     getMultiTestsByUser,
+    getTestsByModuleId,
+    getTestModules
 };
+
+
+
+
+
