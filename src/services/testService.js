@@ -23,14 +23,18 @@ async function evaluateTest(testId, userId, userAnswers) {
         });
     }
 
+    const percentage = (score / test.questions.length) * 100;
+    const isPassed = percentage >= 70;
+
     const result = await TestResult.create({
         testId,
         userId,
         answers: detailedAnswers,
         score,
+        isPassed,
     });
 
-    return { score, total: test.questions.length, result };
+    return { score, total: test.questions.length, percentage, isPassed, result };
 }
 
 async function getTestResult(testResultId, userId) {
@@ -114,6 +118,34 @@ async function getTestById(testId, userId) {
     return test;
 }
 
+
+
+
+async function getPassedPercentageByModule(moduleId, userId) {
+    const tests = await Test.find({ moduleId, testType: 'multi' });
+    if (!tests.length) return { total: 0, passed: 0, percentage: 0 };
+
+    const testIds = tests.map(test => test._id);
+
+    const results = await TestResult.find({ testId: { $in: testIds }, userId });
+
+    const passedTestIds = new Set(
+        results.filter(r => r.isPassed).map(r => r.testId.toString())
+    );
+
+    const total = testIds.length;
+    const passed = passedTestIds.size;
+
+    return {
+        total,
+        passed,
+        percentage: Math.round((passed / total) * 100)
+    };
+}
+
+
+
+
 module.exports = {
     evaluateTest,
     getTestResult,
@@ -122,9 +154,7 @@ module.exports = {
     getTestsByModuleId,
     getTestModules,
     getTestById,
+    getPassedPercentageByModule,
 };
-
-
-
 
 

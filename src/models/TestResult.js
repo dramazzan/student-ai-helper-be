@@ -7,6 +7,7 @@ const testResultSchema = new mongoose.Schema({
     score: Number,
     totalQuestions: Number,
     percentage: Number,
+    isPassed: {type:Boolean , default: false},
     createdAt: { type: Date, default: Date.now },
 });
 

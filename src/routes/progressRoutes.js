@@ -6,6 +6,6 @@ const progressController = require('../controllers/progressController');
 router.get('/overall', authMiddleware, progressController.getUserProgress);
 router.get('/test/:resultId', authMiddleware, progressController.getTestProgress);
 router.get('/test/result/:testId', authMiddleware, progressController.getTestResults)
-
+router.get('/module/:moduleId', authMiddleware, progressController.getModuleProgress);
 
 module.exports = router;

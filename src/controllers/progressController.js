@@ -1,5 +1,6 @@
 const { getOverallProgress, getTestProgress } = require('../services/progressService');
 const { getAllTestResults } = require('../services/progressService')
+const {getPassedPercentageByModule} = require('../services/testService')
 
 exports.getTestResults = async (req, res) => {
     try {
@@ -40,4 +41,15 @@ exports.getTestProgress = async (req, res) => {
 };
 
 
+exports.getModuleProgress = async (req, res) => {
+    try {
+        const { moduleId } = req.params;
+        const userId = req.user._id;
+
+        const progress = await getPassedPercentageByModule(moduleId, userId);
+        res.status(200).json(progress);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
 
