@@ -1,6 +1,7 @@
 const Test = require('../models/Test');
 const TestModule = require('../models/TestModule');
 const TestResult = require('../models/TestResult');
+const mongoose = require('mongoose');
 
 async function evaluateTest(testId, userId, userAnswers) {
     const test = await Test.findById(testId);
@@ -93,13 +94,34 @@ async function getTestModules(userId) {
 }
 
 
+async function getTestById(testId, userId) {
+    if (!mongoose.Types.ObjectId.isValid(testId)) {
+        throw new Error('Неверный ID теста');
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error('Неверный ID пользователя');
+    }
+
+    const test = await Test.findById(testId);
+    if (!test) {
+        throw new Error('Тест не найден');
+    }
+
+    if (!test.owner.equals(userId)) {
+        throw new Error('Нет доступа к этому тесту');
+    }
+
+    return test;
+}
+
 module.exports = {
     evaluateTest,
     getTestResult,
     getNormalTestsByUser,
     getMultiTestsByUser,
     getTestsByModuleId,
-    getTestModules
+    getTestModules,
+    getTestById,
 };
 
 

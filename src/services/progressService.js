@@ -1,5 +1,7 @@
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
+const mongoose = require('mongoose');
+
 
 async function getOverallProgress(userId) {
     const results = await TestResult.find({ userId });
@@ -49,4 +51,59 @@ async function getTestProgress(resultId, userId) {
     };
 }
 
-module.exports = { getOverallProgress, getTestProgress };
+
+
+async function getAllTestResults(testId, userId) {
+    if (!mongoose.Types.ObjectId.isValid(testId)) {
+        throw new Error('Неверный ID теста');
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error('Неверный ID пользователя');
+    }
+
+    const test = await Test.findById(testId);
+    if (!test) {
+        throw new Error('Тест не найден');
+    }
+
+    const results = await TestResult.find({ userId, testId }).sort({ createdAt: -1 });
+
+    if (!results || results.length === 0) {
+        throw new Error('Результаты не найдены');
+    }
+
+    const detailedResults = results.map(result => {
+        const detailedAnswers = result.answers.map(answer => {
+            const question = test.questions.find(q => q._id.toString() === answer.questionId);
+
+            return {
+                question: question?.question || 'Вопрос не найден',
+                options: question?.options || [],
+                selectedAnswerIndex: answer.selectedAnswer,
+                selectedAnswerText: question?.options[answer.selectedAnswer] || '',
+                correctAnswerIndex: question?.correctAnswer,
+                correctAnswerText: question?.options[question.correctAnswer] || '',
+                isCorrect: answer.selectedAnswer === question?.correctAnswer
+            };
+        });
+
+        const percentage = Math.round((result.score / test.questions.length) * 100);
+
+        return {
+            resultId: result._id,
+            score: result.score,
+            totalQuestions: test.questions.length,
+            percentage,
+            details: detailedAnswers,
+            completedAt: result.createdAt
+        };
+    });
+
+    return {
+        testTitle: test.title,
+        attempts: detailedResults
+    };
+}
+
+
+module.exports = { getOverallProgress, getTestProgress , getAllTestResults};

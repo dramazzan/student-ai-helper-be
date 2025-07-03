@@ -46,12 +46,13 @@ router.post('/generate-multi', authMiddleware, upload.single('file'), async (req
         scheduleFileDeletion(req.file.filename);
     } catch (err) {
         next(err);
-    }
+    }ч
 });
 
 router.get('/normal', authMiddleware, testController.getNormalTests);
 router.get('/multi', authMiddleware, testController.getMultiTests);
 router.get('/module/:moduleId' , authMiddleware , testController.getTestsByModuleId)
 router.get('/module' , authMiddleware , testController.getTestModules)
+router.get('/:id', authMiddleware, testController.getTestByIdController);
 
 module.exports = router;

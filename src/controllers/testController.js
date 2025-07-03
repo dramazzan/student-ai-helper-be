@@ -4,7 +4,7 @@ const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
 const path = require('path');
 const {parseFile} = require('../utils/fileParser')
-const {getMultiTestsByUser , getNormalTestsByUser, getTestsByModuleId, getTestModules} = require('../services/testService');
+const {getMultiTestsByUser , getNormalTestsByUser, getTestsByModuleId, getTestModules , getTestById} = require('../services/testService');
 
 exports.generateTest = async (req, res) => {
     try {
@@ -143,7 +143,7 @@ exports.generateMultipleTests = async (req, res) => {
 exports.getNormalTests = async (req, res) => {
     try {
         const tests = await getNormalTestsByUser(req.user._id);
-        res.status(200).json({ tests }); // всегда возвращаем 200 OK
+        res.status(200).json({ tests });
     } catch (err) {
         console.error('Ошибка при получении обычных тестов:', err.message);
         res.status(500).json({ message: 'Ошибка сервера при получении обычных тестов' });
@@ -182,5 +182,20 @@ exports.getTestModules = async (req, res) => {
     } catch (err) {
         console.error('Ошибка при получении модулей:', err.message);
         res.status(500).json({ message: 'Ошибка сервера при получении модулей' });
+    }
+};
+
+
+exports.getTestByIdController = async (req, res) => {
+    try {
+        const testId = req.params.id;
+        const userId = req.user.id;
+
+        const test = await getTestById(testId, userId);
+
+        res.status(200).json(test);
+    } catch (error) {
+        console.error('Ошибка получения теста:', error.message);
+        res.status(400).json({ error: error.message });
     }
 };

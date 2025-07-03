@@ -1,11 +1,11 @@
-const { parsePDF } = require('../utils/fileParser');
+const { parseFile } = require('../utils/fileParser');
 const { generateSummaryFromText } = require('../services/geminiService');
 
 exports.generateSummary = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Файл не найден' });
 
-    const text = await parsePDF(req.file.path);
+    const text = await parseFile(req.file.path);
     const userId = req.user._id;
     const originalFileName = req.file.originalname;
 
