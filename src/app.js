@@ -9,6 +9,7 @@ const progressRoutes = require('./routes/progressRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const testDownloadRoutes = require('./routes/testDownloadRoutes');
 const cookieParser = require('cookie-parser')
+require('./utils/clearUploadsFolder');
 
 const app = express()
 
