@@ -33,7 +33,7 @@ exports.login = async (req, res) => {
             httpOnly: true,
             secure: true,
             sameSite: 'none',
-            maxAge: 1000 * 60 * 60 * 1000
+            maxAge:  60 * 60 * 1000,
         })
 
         res.status(200).json({success: true , message: "Успешный вход", user: user })

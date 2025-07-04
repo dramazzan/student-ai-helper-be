@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const authMiddleware = async (req, res, next) => {
-    const token = req.cookies.token; // ✅ получаем из cookie
+    const token = req.cookies.token;
 
     if (!token) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -14,12 +14,28 @@ const authMiddleware = async (req, res, next) => {
         req.user = await User.findById(decodedToken.id);
 
         if (!req.user) {
+            res.clearCookie("token", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+            });
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
         next();
     } catch (err) {
-        return res.status(401).json({ success: false, message: "Invalid token", error: err.message });
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        let message = "Invalid token";
+        if (err.name === "TokenExpiredError") {
+            message = "Token expired";
+        }
+
+        return res.status(401).json({ success: false, message, error: err.message });
     }
 };
 
