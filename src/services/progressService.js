@@ -43,6 +43,7 @@ async function getTestProgress(resultId, userId) {
 
     return {
         testTitle: test.title,
+        testId: test._id,
         score: result.score,
         total: questions.length,
         percentage,
