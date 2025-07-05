@@ -11,7 +11,14 @@ const testDownloadRoutes = require('./routes/testDownloadRoutes');
 const cookieParser = require('cookie-parser')
 require('./utils/clearUploadsFolder');
 
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const swaggerOptions = require('../swaggerOptions');
+
 const app = express()
+
+const swaggerSpec = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const corsOptions = {
     origin: 'http://localhost:3000',
