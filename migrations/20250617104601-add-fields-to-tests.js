@@ -24,7 +24,7 @@ module.exports = {
                 { _id: doc._id },
                 {
                     $set: {
-                        difficulty: doc.difficulty || 'средний',
+                        difficulty: doc.difficulty || 'medium',
                         questionCount: doc.questionCount || questionCount,
                     },
                 }

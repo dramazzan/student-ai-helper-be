@@ -9,13 +9,11 @@ module.exports = {
         const db = mongoose.connection.db;
         const collection = db.collection('tests');
 
-        // Установить значение 'средний' для отсутствующих difficulty
         await collection.updateMany(
             { difficulty: { $exists: false } },
-            { $set: { difficulty: 'средний' } }
+            { $set: { difficulty: 'medium' } }
         );
 
-        // Установить questionCount как размер массива questions
         const cursor = collection.find({ questionCount: { $exists: false } });
 
         while (await cursor.hasNext()) {

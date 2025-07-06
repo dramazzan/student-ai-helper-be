@@ -24,4 +24,6 @@ function clearUploadsFolder() {
     });
 }
 
-setInterval(clearUploadsFolder, 10 * 60 * 60* 1000);
+clearUploadsFolder();
+
+setInterval(clearUploadsFolder, 10*10);

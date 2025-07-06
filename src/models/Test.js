@@ -11,8 +11,8 @@ const testSchema = new mongoose.Schema({
   questionCount: { type: Number },
   difficulty: {
     type: String,
-    enum: ['лёгкий', 'средний', 'трудный'],
-    default: 'средний',
+    enum: ['easy', 'medium', 'hard'],
+    default: 'medium',
   },
 
 
