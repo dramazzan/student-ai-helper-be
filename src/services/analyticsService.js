@@ -53,19 +53,6 @@ async function analyzeStudentPerformance(userId) {
             recommendation: `Повтори материал по теме: ${topic}`,
         }));
 
-    const summaries = await Summary.find({ owner: userId });
-    const recommendedSummaries = summaries
-        .filter(summary =>
-            weakTopics.some(topic => summary.content.toLowerCase().includes(topic.topic.toLowerCase()))
-        )
-        .map(summary => ({
-            type: 'summary',
-            topic: weakTopics.find(wt =>
-                summary.content.toLowerCase().includes(wt.topic.toLowerCase())
-            )?.topic || 'Общая тема',
-            content: summary.content.slice(0, 300) + '...',
-        }));
-
     const averageScore = Math.round((totalScore / totalQuestions) * 100);
     const progressPercent = Math.min(100, Math.round((results.length / 20) * 100)); // из 20 тестов
 
@@ -81,7 +68,6 @@ async function analyzeStudentPerformance(userId) {
         progressPercent,
         weakTopics,
         lowScoreTests: weakTests,
-        recommendations: recommendedSummaries,
         motivation: message,
     };
 }
