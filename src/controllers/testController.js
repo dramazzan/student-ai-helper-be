@@ -1,4 +1,4 @@
-const { generateTestFromText, splitTextIntoThemes } = require('../services/geminiService');
+const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText} = require('../services/geminiService');
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
@@ -34,6 +34,9 @@ exports.generateTest = async (req, res) => {
             difficulty,
             questionCount,
         });
+
+        const summary = await generateSummaryFromText(text , req.user._id, req.file.originalname)
+        testJson.summary = summary;
 
         res.status(200).json({ test: testJson });
     } catch (error) {

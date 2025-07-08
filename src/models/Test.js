@@ -14,6 +14,10 @@ const testSchema = new mongoose.Schema({
     enum: ['easy', 'medium', 'hard'],
     default: 'medium',
   },
+  summary:{
+    type: String,
+    default: ""
+  },
 
 
 
