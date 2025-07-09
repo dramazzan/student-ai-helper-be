@@ -70,7 +70,10 @@ async function getAllTestResults(testId, userId) {
     const results = await TestResult.find({ userId, testId }).sort({ createdAt: -1 });
 
     if (!results || results.length === 0) {
-        throw new Error('Результаты не найдены');
+        return {
+            testTitle: test.title,
+            attempts: []
+        };
     }
 
     const detailedResults = results.map(result => {

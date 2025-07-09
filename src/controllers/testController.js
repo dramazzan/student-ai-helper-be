@@ -13,12 +13,10 @@ exports.generateTest = async (req, res) => {
         }
 
         const ext = path.extname(req.file.originalname).toLowerCase();
-
         let text;
+
         try {
-            if (ext === '.pdf') {
-                text = await parseFile(req.file.path);
-            } else if (ext === '.docx') {
+            if (ext === '.pdf' || ext === '.docx') {
                 text = await parseFile(req.file.path);
             } else {
                 return res.status(400).json({ message: 'Поддерживаются только PDF и DOCX файлы' });
@@ -30,15 +28,17 @@ exports.generateTest = async (req, res) => {
 
         const { difficulty, questionCount } = req.body;
 
-        const testJson = await generateTestFromText(text, req.user._id, req.file.originalname, {
+        const test = await generateTestFromText(text, req.user._id, req.file.originalname, {
             difficulty,
             questionCount,
         });
 
-        const summary = await generateSummaryFromText(text , req.user._id, req.file.originalname)
-        testJson.summary = summary;
+        const summary = await generateSummaryFromText(text, req.user._id, req.file.originalname);
+        test.summary = summary;
 
-        res.status(200).json({ test: testJson });
+        await test.save();
+
+        res.status(200).json({ test });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Ошибка генерации теста' });
@@ -119,6 +119,9 @@ exports.generateMultipleTests = async (req, res) => {
                 questionCount,
                 testType: "multi"
             });
+
+            const summary = await generateSummaryFromText(text, req.user._id, req.file.originalname);
+            test.summary = summary;
 
             test.themeTitle = theme.title;
             test.week = week;

@@ -4,14 +4,18 @@ const {getPassedPercentageByModule} = require('../services/testService')
 
 exports.getTestResults = async (req, res) => {
     try {
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ message: 'Неавторизованный доступ' })
+        }
+
         const userId = req.user._id
         const testId = req.params.testId
 
         const results = await getAllTestResults(testId, userId)
         return res.status(200).json(results)
     } catch (error) {
-        console.error('Ошибка получения результатов теста:', error.message)
-        return res.status(400).json({ message: error.message })
+        console.error('Ошибка получения результатов теста:', error)
+        return res.status(400).json({ message: error.message || 'Не удалось получить результаты' })
     }
 }
 
