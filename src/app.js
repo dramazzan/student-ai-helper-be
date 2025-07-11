@@ -8,6 +8,7 @@ const recommendationRoutes = require('./routes/recommendationRoutes');
 const progressRoutes = require('./routes/progressRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const testDownloadRoutes = require('./routes/testDownloadRoutes');
+const testFromUrlRoutes = require('./routes/testFromUrlRoutes');
 const cookieParser = require('cookie-parser')
 require('./utils/clearUploadsFolder');
 
@@ -27,7 +28,8 @@ const corsOptions = {
 
 
 app.use(cors(corsOptions))
-app.use(express.json())
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(cookieParser())
 
 app.get('/', (req, res)=>{
@@ -42,5 +44,6 @@ app.use('/api/test/passing' , passingRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/analytics' , analyticsRoutes)
 app.use('/api/tests' , testDownloadRoutes )
+app.use('/api/generate-test', testFromUrlRoutes)
 
 module.exports = app

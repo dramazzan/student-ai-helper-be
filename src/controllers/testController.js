@@ -1,10 +1,16 @@
-const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText} = require('../services/geminiService');
+const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText } = require('../services/geminiService');
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
 const TestModule = require('../models/TestModule');
 const path = require('path');
-const {parseFile} = require('../utils/fileParser')
-const {getMultiTestsByUser , getNormalTestsByUser, getTestsByModuleId, getTestModules , getTestById} = require('../services/testService');
+const { parseFile } = require('../utils/fileParser');
+const {
+    getMultiTestsByUser,
+    getNormalTestsByUser,
+    getTestsByModuleId,
+    getTestModules,
+    getTestById
+} = require('../services/testService');
 
 exports.generateTest = async (req, res) => {
     try {
@@ -12,15 +18,10 @@ exports.generateTest = async (req, res) => {
             return res.status(400).json({ message: 'Файл не найден' });
         }
 
-        const ext = path.extname(req.file.originalname).toLowerCase();
         let text;
 
         try {
-            if (ext === '.pdf' || ext === '.docx') {
-                text = await parseFile(req.file.path);
-            } else {
-                return res.status(400).json({ message: 'Поддерживаются только PDF и DOCX файлы' });
-            }
+            text = await parseFile(req.file.path);
         } catch (err) {
             console.error('Ошибка чтения файла:', err.message);
             return res.status(400).json({ message: 'Ошибка при обработке файла. Попробуйте другой.' });
@@ -42,6 +43,61 @@ exports.generateTest = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Ошибка генерации теста' });
+    }
+};
+
+exports.generateMultipleTests = async (req, res) => {
+    try {
+        const { difficulty, questionCount } = req.body;
+        const userId = req.user._id;
+
+        const text = await parseFile(req.file.path);
+        const themes = await splitTextIntoThemes(text);
+
+        if (!themes || themes.length === 0) {
+            return res.status(400).json({ message: 'Темы не найдены в файле' });
+        }
+
+        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+        const fileNameWithoutExtension = path.basename(originalName, path.extname(originalName));
+
+        const testModule = await TestModule.create({
+            owner: userId,
+            originalFileName: fileNameWithoutExtension,
+        });
+
+        const tests = [];
+        let week = 1;
+
+        for (const theme of themes) {
+            const test = await generateTestFromText(theme.content, userId, originalName, {
+                difficulty,
+                questionCount,
+                testType: "multi"
+            });
+
+            const summary = await generateSummaryFromText(text, userId, req.file.originalname);
+            test.summary = summary;
+
+            test.themeTitle = theme.title;
+            test.week = week;
+            test.moduleId = testModule._id;
+
+            await test.save();
+            tests.push(test);
+            week++;
+        }
+
+        res.status(200).json({
+            message: 'Тесты успешно созданы по темам',
+            moduleId: testModule._id,
+            testCount: tests.length,
+            tests,
+        });
+
+    } catch (error) {
+        console.error('Ошибка при создании нескольких тестов:', error.message);
+        res.status(500).json({ message: 'Ошибка при генерации тестов', error: error.message });
     }
 };
 
@@ -89,63 +145,6 @@ exports.getTestResult = async (req, res) => {
     }
 };
 
-exports.generateMultipleTests = async (req, res) => {
-    try {
-        const { difficulty, questionCount } = req.body;
-        const userId = req.user._id;
-
-        const text = await parseFile(req.file.path);
-        const themes = await splitTextIntoThemes(text);
-
-        if (!themes || themes.length === 0) {
-            return res.status(400).json({ message: 'Темы не найдены в файле' });
-        }
-
-        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
-        const fileNameWithoutExtension = path.basename(originalName, path.extname(originalName));
-
-        const testModule = await TestModule.create({
-            owner: userId,
-            originalFileName: fileNameWithoutExtension,
-
-        });
-
-        const tests = [];
-        let week = 1;
-
-        for (const theme of themes) {
-            const test = await generateTestFromText(theme.content, userId, originalName, {
-                difficulty,
-                questionCount,
-                testType: "multi"
-            });
-
-            const summary = await generateSummaryFromText(text, req.user._id, req.file.originalname);
-            test.summary = summary;
-
-            test.themeTitle = theme.title;
-            test.week = week;
-            test.moduleId = testModule._id;
-
-            await test.save();
-            tests.push(test);
-            week++;
-        }
-
-        res.status(200).json({
-            message: 'Тесты успешно созданы по темам',
-            moduleId: testModule._id,
-            testCount: tests.length,
-            tests,
-        });
-
-    } catch (error) {
-        console.error('Ошибка при создании нескольких тестов:', error.message);
-        res.status(500).json({ message: 'Ошибка при генерации тестов', error: error.message });
-    }
-};
-
-
 exports.getNormalTests = async (req, res) => {
     try {
         const tests = await getNormalTestsByUser(req.user._id);
@@ -156,7 +155,6 @@ exports.getNormalTests = async (req, res) => {
     }
 };
 
-
 exports.getMultiTests = async (req, res) => {
     try {
         const tests = await getMultiTestsByUser(req.user._id);
@@ -166,8 +164,6 @@ exports.getMultiTests = async (req, res) => {
         res.status(500).json({ message: 'Ошибка сервера при получении мульти-тестов' });
     }
 };
-
-
 
 exports.getTestsByModuleId = async (req, res) => {
     try {
@@ -180,7 +176,6 @@ exports.getTestsByModuleId = async (req, res) => {
     }
 };
 
-
 exports.getTestModules = async (req, res) => {
     try {
         const modules = await getTestModules(req.user._id);
@@ -190,7 +185,6 @@ exports.getTestModules = async (req, res) => {
         res.status(500).json({ message: 'Ошибка сервера при получении модулей' });
     }
 };
-
 
 exports.getTestByIdController = async (req, res) => {
     try {

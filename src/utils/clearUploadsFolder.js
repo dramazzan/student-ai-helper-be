@@ -26,4 +26,4 @@ function clearUploadsFolder() {
 
 clearUploadsFolder();
 
-setInterval(clearUploadsFolder, 10*10);
+setInterval(clearUploadsFolder, 10*60*1000);

@@ -1,38 +1,28 @@
 const fs = require('fs');
-const path = require('path');
-const mammoth = require('mammoth');
-const pdfParse = require('pdf-parse');
+const axios = require('axios');
+const FormData = require('form-data');
 
 async function parseFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
+  try {
+    const form = new FormData();
+    form.append('file', fs.createReadStream(filePath));
 
-  if (ext === '.docx') {
-    try {
-      const buffer = fs.readFileSync(filePath);
-      const result = await mammoth.extractRawText({ buffer });
-      if (!result.value || result.value.trim().length === 0) {
-        throw new Error('DOCX не содержит текста');
-      }
-      return result.value.trim();
-    } catch (error) {
-      throw new Error('Ошибка чтения DOCX: ' + error.message);
+    const response = await axios.post('http://localhost:8000/parse', form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
+
+    const text = response.data.text;
+
+    if (!text || !text.trim()) {
+      throw new Error('Файл не содержит текста');
     }
-  }
 
-  if (ext === '.pdf') {
-    try {
-      const buffer = fs.readFileSync(filePath);
-      const data = await pdfParse(buffer);
-      if (!data.text || data.text.trim().length === 0) {
-        throw new Error('PDF не содержит читаемого текста');
-      }
-      return data.text.trim();
-    } catch (error) {
-      throw new Error('Ошибка чтения PDF: ' + error.message);
-    }
+    return text.trim();
+  } catch (error) {
+    throw new Error('Ошибка при парсинге через Unstructured: ' + error.message);
   }
-
-  throw new Error('Неподдерживаемый формат файла: ' + ext);
 }
 
 module.exports = { parseFile };
