@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const testPassingController = require('../controllers/testPassingController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const testPassingController = require('../../controllers/testController/testPassingController');
+const authMiddleware = require('../../middlewares/authMiddleware');
 
 /**
  * @swagger

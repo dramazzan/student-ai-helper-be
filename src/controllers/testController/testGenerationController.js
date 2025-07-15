@@ -1,8 +1,8 @@
-const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText } = require('../services/geminiService');
-const Test = require('../models/Test');
-const TestModule = require('../models/TestModule');
+const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText } = require('../../services/geminiService');
+const Test = require('../../models/Test');
+const TestModule = require('../../models/TestModule');
 const path = require('path');
-const { parseFile } = require('../utils/fileParser');
+const { parseFile } = require('../../utils/fileParser');
 
 exports.generateTest = async (req, res) => {
     try {

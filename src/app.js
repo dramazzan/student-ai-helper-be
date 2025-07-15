@@ -2,13 +2,13 @@ const express  = require('express')
 const cors = require('cors')
 const summaryRoutes = require('./routes/summaryRoutes')
 const authRoutes = require('./routes/authRoutes')
-const testRoutes = require('./routes/testRoutes');
-const passingRoutes = require('./routes/testPassingRoutes');
+const testRoutes = require('./routes/testRoutes/testRoutes');
+const passingRoutes = require('./routes/testRoutes/testPassingRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const progressRoutes = require('./routes/progressRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const testDownloadRoutes = require('./routes/testDownloadRoutes');
-const testFromUrlRoutes = require('./routes/testFromUrlRoutes');
+const testDownloadRoutes = require('./routes/testRoutes/testDownloadRoutes');
+const testFromUrlRoutes = require('./routes/testRoutes/testFromUrlRoutes');
 const cookieParser = require('cookie-parser')
 require('./utils/clearUploadsFolder');
 

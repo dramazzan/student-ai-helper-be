@@ -1,4 +1,4 @@
-const { generateTestFromURL } = require('../services/testFromUrlService');
+const { generateTestFromURL } = require('../../services/testService/testFromUrlService');
 
 async function generateTestFromUrlController(req, res) {
     try {

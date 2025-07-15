@@ -1,12 +1,12 @@
 const path = require('path');
 const fs = require('fs');
-const Test = require('../models/Test');
-const { generateDocxFromTest } = require('../services/downloadServices/docxService');
-const { generatePdfFromTest } = require('../services/downloadServices/pdfService');
-const { generateGiftFromTest } = require('../services/downloadServices/giftService');
-const { generateQtiFromTest } = require('../services/downloadServices/qtiService');
-const { generateMoodleXmlFromTest } = require('../services/downloadServices/moodleXmlService');
-const { generateCsvFromTest } = require('../services/downloadServices/csvService');
+const Test = require('../../models/Test');
+const { generateDocxFromTest } = require('../../services/downloadServices/docxService');
+const { generatePdfFromTest } = require('../../services/downloadServices/pdfService');
+const { generateGiftFromTest } = require('../../services/downloadServices/giftService');
+const { generateQtiFromTest } = require('../../services/downloadServices/qtiService');
+const { generateMoodleXmlFromTest } = require('../../services/downloadServices/moodleXmlService');
+const { generateCsvFromTest } = require('../../services/downloadServices/csvService');
 
 async function downloadFile(test, userId, generatorFn, format, res) {
     if (!test) {

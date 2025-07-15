@@ -1,4 +1,4 @@
-const { evaluateTest } = require('../services/testService/testEvaluationService');
+const { evaluateTest } = require('../../services/testService/testEvaluationService');
 
 exports.submitTest = async (req, res) => {
     try {

@@ -1,5 +1,5 @@
-const TestResult = require('../models/TestResult');
-const Test = require('../models/Test');
+const TestResult = require('../../models/TestResult');
+const Test = require('../../models/Test');
 
 exports.getTestResult = async (req, res) => {
     try {

@@ -3,13 +3,13 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const authMiddleware = require('../middlewares/authMiddleware');
-const { scheduleFileDeletion } = require('../utils/fileDeletion');
+const authMiddleware = require('../../middlewares/authMiddleware');
+const { scheduleFileDeletion } = require('../../utils/fileDeletion');
 
-const generationController = require('../controllers/testGenerationController');
-const resultController = require('../controllers/testResultController');
-const listController = require('../controllers/testListController');
-const moduleController = require('../controllers/moduleController');
+const generationController = require('../../controllers/testController/testGenerationController');
+const resultController = require('../../controllers/testController/testResultController');
+const listController = require('../../controllers/testController/testListController');
+const moduleController = require('../../controllers/moduleController');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
