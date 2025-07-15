@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const summaryController = require('../controllers/summaryController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { scheduleFileDeletion } = require("../services/fileService");
+const { scheduleFileDeletion } = require("../utils/fileDeletion");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

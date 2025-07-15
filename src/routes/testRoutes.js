@@ -3,11 +3,14 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const testController = require('../controllers/testController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { scheduleFileDeletion } = require('../services/fileService');
+const { scheduleFileDeletion } = require('../utils/fileDeletion');
 
-// Настройка хранения файлов
+const generationController = require('../controllers/testGenerationController');
+const resultController = require('../controllers/testResultController');
+const listController = require('../controllers/testListController');
+const moduleController = require('../controllers/moduleController');
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = 'uploads/';
@@ -24,17 +27,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: {
-        fileSize: 100 * 1024 * 1024 // 100 MB
-    }
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
 });
-
 
 /**
  * @swagger
  * /api/test/generate-test:
  *   post:
- *     summary: Генерация теста из загруженного файла
+ *     summary: Генерация теста из файла
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
@@ -47,21 +47,18 @@ const upload = multer({
  *             properties:
  *               difficulty:
  *                 type: string
- *                 description: Сложность теста (например, easy, medium, hard)
  *               questionCount:
  *                 type: integer
- *                 description: Кол-во вопросов в тесте
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Файл формата .pdf, .docx, .pptx, .txt, .html и др.
  *     responses:
  *       200:
  *         description: Тест успешно сгенерирован
  */
 router.post('/generate-test', authMiddleware, upload.single('file'), async (req, res, next) => {
     try {
-        await testController.generateTest(req, res);
+        await generationController.generateTest(req, res);
         scheduleFileDeletion(req.file.filename);
     } catch (err) {
         next(err);
@@ -72,7 +69,7 @@ router.post('/generate-test', authMiddleware, upload.single('file'), async (req,
  * @swagger
  * /api/test/generate-multi:
  *   post:
- *     summary: Генерация мульти-теста из загруженного файла по темам
+ *     summary: Генерация мульти-теста из файла
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
@@ -85,21 +82,18 @@ router.post('/generate-test', authMiddleware, upload.single('file'), async (req,
  *             properties:
  *               difficulty:
  *                 type: string
- *                 description: Сложность тестов
  *               questionCount:
  *                 type: integer
- *                 description: Вопросов на каждую тему
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Файл (поддерживаются .pdf, .docx, .pptx, .txt, .html и др.)
  *     responses:
  *       200:
  *         description: Мульти-тест успешно сгенерирован
  */
 router.post('/generate-multi', authMiddleware, upload.single('file'), async (req, res, next) => {
     try {
-        await testController.generateMultipleTests(req, res);
+        await generationController.generateMultipleTests(req, res);
         scheduleFileDeletion(req.file.filename);
     } catch (err) {
         next(err);
@@ -115,23 +109,23 @@ router.post('/generate-multi', authMiddleware, upload.single('file'), async (req
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *         description: ID результата теста
  *     responses:
  *       200:
- *         description: Успешный ответ с результатом теста
+ *         description: Результат теста
  */
-router.get('/result/:id', authMiddleware, testController.getTestResult);
+router.get('/result/:id', authMiddleware, resultController.getTestResult);
 
 /**
  * @swagger
  * /api/test/normal:
  *   get:
- *     summary: Получить список обычных тестов
+ *     summary: Получить обычные тесты пользователя
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
@@ -139,13 +133,13 @@ router.get('/result/:id', authMiddleware, testController.getTestResult);
  *       200:
  *         description: Список обычных тестов
  */
-router.get('/normal', authMiddleware, testController.getNormalTests);
+router.get('/normal', authMiddleware, listController.getNormalTests);
 
 /**
  * @swagger
  * /api/test/multi:
  *   get:
- *     summary: Получить список мульти-тестов
+ *     summary: Получить мульти-тесты пользователя
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
@@ -153,7 +147,7 @@ router.get('/normal', authMiddleware, testController.getNormalTests);
  *       200:
  *         description: Список мульти-тестов
  */
-router.get('/multi', authMiddleware, testController.getMultiTests);
+router.get('/multi', authMiddleware, listController.getMultiTests);
 
 /**
  * @swagger
@@ -164,23 +158,22 @@ router.get('/multi', authMiddleware, testController.getMultiTests);
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: moduleId
- *         in: path
+ *       - in: path
+ *         name: moduleId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID модуля
  *     responses:
  *       200:
- *         description: Список тестов по модулю
+ *         description: Тесты модуля
  */
-router.get('/module/:moduleId', authMiddleware, testController.getTestsByModuleId);
+router.get('/module/:moduleId', authMiddleware, listController.getTestsByModuleId);
 
 /**
  * @swagger
  * /api/test/module:
  *   get:
- *     summary: Получить список всех модулей с тестами
+ *     summary: Получить модули с тестами
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
@@ -188,7 +181,7 @@ router.get('/module/:moduleId', authMiddleware, testController.getTestsByModuleI
  *       200:
  *         description: Список модулей
  */
-router.get('/module', authMiddleware, testController.getTestModules);
+router.get('/module', authMiddleware, moduleController.getTestModules);
 
 /**
  * @swagger
@@ -199,16 +192,15 @@ router.get('/module', authMiddleware, testController.getTestModules);
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID теста
  *     responses:
  *       200:
- *         description: Тест по ID
+ *         description: Тест найден
  */
-router.get('/:id', authMiddleware, testController.getTestByIdController);
+router.get('/:id', authMiddleware, listController.getTestByIdController);
 
 module.exports = router;
