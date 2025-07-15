@@ -2,7 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 function escapeXml(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
 async function generateQtiFromTest(test, fileName) {
@@ -12,11 +15,12 @@ async function generateQtiFromTest(test, fileName) {
             return `<simpleChoice identifier="${id}">${escapeXml(opt)}</simpleChoice>`;
         }).join('\n');
 
-        const correctIndex = q.options.indexOf(q.correctAnswer);
+        // q.correctAnswer как индекс (число)
+        const correctIndex = typeof q.correctAnswer === 'number' ? q.correctAnswer : Number(q.correctAnswer);
         const correctId = `choice${String.fromCharCode(65 + correctIndex)}`;
 
         return `
-<assessmentItem identifier="q${i + 1}" title="${escapeXml(q.question)}" timeDependent="false">
+<assessmentItem identifier="q${i + 1}" title="Q${i + 1}" timeDependent="false">
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse>
       <value>${correctId}</value>

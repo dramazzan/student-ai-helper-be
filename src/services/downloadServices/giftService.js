@@ -4,12 +4,16 @@ const path = require('path');
 async function generateGiftFromTest(test, fileName) {
     const lines = [];
 
-    test.questions.forEach((q) => {
-        lines.push(`${q.question} {`);
-        q.options.forEach((option) => {
-            const prefix = option === q.correctAnswer ? '=' : '~';
-            lines.push(`${prefix}${option}`);
+    test.questions.forEach((q, index) => {
+        lines.push(`::Q${index + 1}:: ${q.question} {`);
+
+        (q.options || []).forEach((option, i) => {
+            const prefix = i === q.correctAnswer ? '=' : '~';
+            // Экранирование фигурных скобок и кавычек
+            const safeOption = option.replace(/[{}]/g, '').replace(/"/g, '\"');
+            lines.push(`${prefix}${safeOption}`);
         });
+
         lines.push('}\n');
     });
 
