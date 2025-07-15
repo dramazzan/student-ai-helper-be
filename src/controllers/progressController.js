@@ -1,6 +1,6 @@
 const { getOverallProgress, getTestProgress } = require('../services/progressService');
 const { getAllTestResults } = require('../services/progressService')
-const {getPassedPercentageByModule} = require('../services/testService')
+const {getPassedPercentageByModule} = require('../services/testService/testModuleService')
 
 exports.getTestResults = async (req, res) => {
     try {

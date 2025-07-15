@@ -3,7 +3,7 @@ const {
     getNormalTestsByUser,
     getTestsByModuleId,
     getTestById
-} = require('../services/testService');
+} = require('../services/testService/testQueryService');
 
 exports.getNormalTests = async (req, res) => {
     try {
