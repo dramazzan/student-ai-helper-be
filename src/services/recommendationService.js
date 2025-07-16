@@ -1,6 +1,6 @@
 const Test = require('../models/Test');
 const TestResult = require('../models/TestResult');
-const { generateSummaryFromText } = require('./geminiService');
+const { generateSummaryFromText } = require('./testService/geminiService');
 
 async function analyzeWeakTopicsWithSummaries(resultId, userId) {
     const result = await TestResult.findById(resultId);

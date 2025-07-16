@@ -1,4 +1,4 @@
-const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText } = require('../../services/geminiService');
+const { generateTestFromText, splitTextIntoThemes, generateSummaryFromText } = require('../../services/testService/geminiService');
 const Test = require('../../models/Test');
 const TestModule = require('../../models/TestModule');
 const path = require('path');

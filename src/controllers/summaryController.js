@@ -1,5 +1,5 @@
 const { parseFile } = require('../utils/fileParser');
-const { generateSummaryFromText } = require('../services/geminiService');
+const { generateSummaryFromText } = require('../services/testService/geminiService');
 
 exports.generateSummary = async (req, res) => {
   try {

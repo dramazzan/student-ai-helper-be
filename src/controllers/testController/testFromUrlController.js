@@ -2,18 +2,25 @@ const { generateTestFromURL } = require('../../services/testService/testFromUrlS
 
 async function generateTestFromUrlController(req, res) {
     try {
-        const { url, options } = req.body;
-        const userId = req.user.id || req.user._id;
+        const { url, difficulty, questionCount, questionType, testType } = req.body;
+        const userId = req.user?.id || req.user?._id;
 
-        if (!url) {
-            return res.status(400).json({ error: 'URL обязателен' });
+        if (!url || typeof url !== 'string') {
+            return res.status(400).json({ error: 'URL обязателен и должен быть строкой' });
         }
 
+        const options = {
+            difficulty: difficulty || 'medium',
+            questionCount: questionCount || 5,
+            questionType: questionType || 'тест с выбором',
+            testType: testType || 'normal',
+        };
+
         const test = await generateTestFromURL(url, userId, url, options);
-        res.status(201).json(test);
+        return res.status(201).json(test);
     } catch (error) {
-        console.error('Ошибка генерации теста из URL:', error.message);
-        res.status(500).json({ error: 'Ошибка генерации теста' });
+        console.error('❌ Ошибка генерации теста из URL:', error.message);
+        return res.status(500).json({ error: 'Ошибка генерации теста' });
     }
 }
 
