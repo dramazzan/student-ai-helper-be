@@ -6,6 +6,8 @@ async function parseFile(filePath) {
   try {
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath));
+    form.append('strategy', 'fast');
+
 
     const response = await axios.post('http://localhost:8000/parse', form, {
       headers: form.getHeaders(),
