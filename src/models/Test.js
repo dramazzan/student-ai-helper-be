@@ -18,9 +18,16 @@ const testSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  sourceType: {
+    type: String,
+    enum: ['file', 'url', 'weak_topics'],
+    required: true,
+  },
+  sourceDetails: {
+    type: [String],
+    default: '',
 
-
-
+  },
   questions: [
     {
       question: { type: String, required: true },

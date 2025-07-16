@@ -80,6 +80,8 @@ ${text}
             originalFileName: originalURL,
             title: parsed.title,
             questions: parsed.questions,
+            sourceType: 'url',
+            sourceDetails: originalURL,
             difficulty,
             questionCount,
             testType,

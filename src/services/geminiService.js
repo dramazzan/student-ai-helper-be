@@ -85,6 +85,8 @@ ${text}
       questions: parsed.questions,
       difficulty: options.difficulty || 'medium',
       questionCount: options.questionCount || parsed.questions.length,
+      sourceType: 'file',
+      sourceDetails: originalFileName,
       testType: options.testType || 'normal',
     });
 
