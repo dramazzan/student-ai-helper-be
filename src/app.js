@@ -10,6 +10,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const testDownloadRoutes = require('./routes/testRoutes/testDownloadRoutes');
 const testFromUrlRoutes = require('./routes/testRoutes/testFromUrlRoutes');
 const cookieParser = require('cookie-parser')
+const weakTopicRoutes = require('./routes/weakTopicRoutes');
 require('./utils/clearUploadsFolder');
 
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -45,5 +46,6 @@ app.use('/api/progress', progressRoutes)
 app.use('/api/analytics' , analyticsRoutes)
 app.use('/api/tests' , testDownloadRoutes )
 app.use('/api/generate-test', testFromUrlRoutes)
+app.use('/api/tests/weak-topics', weakTopicRoutes);
 
 module.exports = app
