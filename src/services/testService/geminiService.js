@@ -29,7 +29,15 @@ async function generateSummaryFromText(text, userId, originalFileName) {
 async function generateTestFromText(text, userId, originalFileName, options = {}, userPrompt = null) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
-  // 1. Если userPrompt есть — извлечь параметры
+  options = {
+    difficulty: 'medium',
+    questionCount: 5,
+    questionType: 'тест с выбором',
+    testType: 'normal',
+    ...options,
+  };
+
+  // 1. Извлечение параметров, если есть userPrompt
   if (userPrompt) {
     const extractPrompt = `
 Ты помощник, который извлекает параметры генерации теста из пользовательского запроса.
@@ -43,26 +51,21 @@ async function generateTestFromText(text, userId, originalFileName, options = {}
 Запрос: "${userPrompt}"
     `;
 
-    const extraction = await model.generateContent({
-      contents: [{ parts: [{ text: extractPrompt }] }],
-    });
-
-    const extractedText = extraction.response.text().replace(/```json|```/g, '').trim();
-
     try {
+      const extraction = await model.generateContent({
+        contents: [{ parts: [{ text: extractPrompt }] }],
+      });
+
+      const extractedText = extraction.response.text().replace(/```json|```/g, '').trim();
       const extracted = JSON.parse(extractedText);
 
-      options.difficulty = options.difficulty || extracted.difficulty || 'medium';
-      options.questionCount = options.questionCount || extracted.questionCount || 5;
-      options.questionType = options.questionType || 'тест с выбором';
-      options.testType = options.testType || 'normal';
+      options.difficulty = extracted.difficulty || options.difficulty;
+      options.questionCount = extracted.questionCount || options.questionCount;
 
-      // если текста нет — сгенерировать учебный текст
       if (!text) {
         const genTextPrompt = `
 Создай учебный материал по теме "${extracted.subject}" для генерации теста. Объём — 1–2 абзаца, чтобы ИИ мог на его основе составить тест.
         `;
-
         const genTextRes = await model.generateContent({
           contents: [{ parts: [{ text: genTextPrompt }] }],
         });
@@ -75,12 +78,12 @@ async function generateTestFromText(text, userId, originalFileName, options = {}
     }
   }
 
-  // Если текста всё ещё нет — ошибка
+  // 2. Проверка, есть ли текст
   if (!text) {
     throw new Error("Не передан ни текст, ни запрос для генерации учебного материала");
   }
 
-  // 2. Генерация теста по тексту
+  // 3. Генерация теста
   const testGenPrompt = `
 Прочитай следующий учебный материал и составь тест в формате JSON. Учитывай параметры:
 - Сложность: ${options.difficulty}
@@ -169,4 +172,4 @@ module.exports = {
   generateSummaryFromText,
   generateTestFromText,
   splitTextIntoThemes,
-};
+}

@@ -12,7 +12,6 @@ exports.generateTest = async (req, res) => {
         let text = null;
         let originalName = 'generated-from-prompt';
 
-        // Если файл есть — распарсим текст
         if (req.file) {
             try {
                 text = await parseFile(req.file.path);
@@ -25,7 +24,6 @@ exports.generateTest = async (req, res) => {
             }
         }
 
-        // Если нет ни текста, ни промпта — ошибка
         if (!text && !userPrompt) {
             return res
                 .status(400)
@@ -40,7 +38,10 @@ exports.generateTest = async (req, res) => {
             userPrompt
         );
 
-        // генерируем конспект, только если есть текст (из файла или из prompt-а)
+        if (!test) {
+            return res.status(500).json({ message: 'Ошибка при генерации теста' });
+        }
+
         if (text) {
             const summary = await generateSummaryFromText(text, req.user._id, originalName);
             test.summary = summary;
@@ -54,6 +55,7 @@ exports.generateTest = async (req, res) => {
         res.status(500).json({ message: 'Ошибка генерации теста' });
     }
 };
+
 
 exports.generateMultipleTests = async (req, res) => {
     try {
