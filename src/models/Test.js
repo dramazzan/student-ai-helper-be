@@ -20,7 +20,7 @@ const testSchema = new mongoose.Schema({
   },
   sourceType: {
     type: String,
-    enum: ['file', 'url', 'weak-topic'],
+    enum: ['file', 'url', 'weak-topic' , 'file+prompt'],
     required: true,
   },
   sourceDetails: {

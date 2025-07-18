@@ -4,28 +4,48 @@ const TestModule = require('../../models/TestModule');
 const path = require('path');
 const { parseFile } = require('../../utils/fileParser');
 
+
 exports.generateTest = async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'Файл не найден' });
+        const { difficulty, questionCount, userPrompt } = req.body;
+
+        let text = null;
+        let originalName = 'generated-from-prompt';
+
+        // Если файл есть — распарсим текст
+        if (req.file) {
+            try {
+                text = await parseFile(req.file.path);
+                originalName = req.file.originalname;
+            } catch (err) {
+                console.error('Ошибка чтения файла:', err.message);
+                return res
+                    .status(400)
+                    .json({ message: 'Ошибка при обработке файла. Попробуйте другой.' });
+            }
         }
 
-        let text;
-        try {
-            text = await parseFile(req.file.path);
-        } catch (err) {
-            console.error('Ошибка чтения файла:', err.message);
-            return res.status(400).json({ message: 'Ошибка при обработке файла. Попробуйте другой.' });
+        // Если нет ни текста, ни промпта — ошибка
+        if (!text && !userPrompt) {
+            return res
+                .status(400)
+                .json({ message: 'Нужно передать файл или промпт для генерации теста' });
         }
 
-        const { difficulty, questionCount } = req.body;
-        const test = await generateTestFromText(text, req.user._id, req.file.originalname, {
-            difficulty,
-            questionCount,
-        });
+        const test = await generateTestFromText(
+            text,
+            req.user._id,
+            originalName,
+            { difficulty, questionCount },
+            userPrompt
+        );
 
-        const summary = await generateSummaryFromText(text, req.user._id, req.file.originalname);
-        test.summary = summary;
+        // генерируем конспект, только если есть текст (из файла или из prompt-а)
+        if (text) {
+            const summary = await generateSummaryFromText(text, req.user._id, originalName);
+            test.summary = summary;
+        }
+
         await test.save();
 
         res.status(200).json({ test });

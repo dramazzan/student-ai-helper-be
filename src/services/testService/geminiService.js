@@ -26,76 +26,118 @@ async function generateSummaryFromText(text, userId, originalFileName) {
   return summaryText;
 }
 
-async function generateTestFromText(text, userId, originalFileName, options = {}) {
+async function generateTestFromText(text, userId, originalFileName, options = {}, userPrompt = null) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
-  const {
-    difficulty = 'medium',
-    questionCount = 5,
-    questionType = 'тест с выбором',
-    testType= 'normal',
-  } = options;
+  // 1. Если userPrompt есть — извлечь параметры
+  if (userPrompt) {
+    const extractPrompt = `
+Ты помощник, который извлекает параметры генерации теста из пользовательского запроса.
+Верни JSON с полями:
+- subject: тема
+- questionCount: количество вопросов
+- difficulty: easy | medium | hard
+- optionsCount: число вариантов ответа (по умолчанию 4)
+- questionLength: short | long
 
-  const prompt = `
-Прочитай следующий учебный материал и составь тест в формате JSON. Учитывай следующие параметры:
-- Сложность: ${difficulty}
-- Количество вопросов: ${questionCount}
-- Тип вопросов: ${questionType}
-- Тип теста: ${testType}
+Запрос: "${userPrompt}"
+    `;
 
-Тест должен содержать:
-- title: название темы
-- questions: массив с вопросами, каждый из которых имеет:
-  - question: текст вопроса
-  - options: массив из 3–4 вариантов ответа
-  - correctAnswer: индекс правильного варианта ответа (начиная с 0)
-  - topic: тема вопроса
+    const extraction = await model.generateContent({
+      contents: [{ parts: [{ text: extractPrompt }] }],
+    });
 
-❗ ВАЖНО: Верни только JSON без форматирования, без обрамления в \`\`\`json или другие блоки. Просто JSON.
+    const extractedText = extraction.response.text().replace(/```json|```/g, '').trim();
+
+    try {
+      const extracted = JSON.parse(extractedText);
+
+      options.difficulty = options.difficulty || extracted.difficulty || 'medium';
+      options.questionCount = options.questionCount || extracted.questionCount || 5;
+      options.questionType = options.questionType || 'тест с выбором';
+      options.testType = options.testType || 'normal';
+
+      // если текста нет — сгенерировать учебный текст
+      if (!text) {
+        const genTextPrompt = `
+Создай учебный материал по теме "${extracted.subject}" для генерации теста. Объём — 1–2 абзаца, чтобы ИИ мог на его основе составить тест.
+        `;
+
+        const genTextRes = await model.generateContent({
+          contents: [{ parts: [{ text: genTextPrompt }] }],
+        });
+
+        text = genTextRes.response.text().trim();
+      }
+    } catch (err) {
+      console.error("Ошибка парсинга параметров из промпта:", err.message);
+      throw new Error("Не удалось извлечь параметры из пользовательского запроса.");
+    }
+  }
+
+  // Если текста всё ещё нет — ошибка
+  if (!text) {
+    throw new Error("Не передан ни текст, ни запрос для генерации учебного материала");
+  }
+
+  // 2. Генерация теста по тексту
+  const testGenPrompt = `
+Прочитай следующий учебный материал и составь тест в формате JSON. Учитывай параметры:
+- Сложность: ${options.difficulty}
+- Кол-во вопросов: ${options.questionCount}
+- Тип вопросов: ${options.questionType}
+- Тип теста: ${options.testType}
+
+Формат:
+{
+  "title": "Тема теста",
+  "questions": [
+    {
+      "question": "Вопрос",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": 1,
+      "topic": "Тема вопроса"
+    }
+  ]
+}
 
 Учебный материал:
 ---
 ${text}
-`;
+  `;
 
   const result = await model.generateContent({
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ parts: [{ text: testGenPrompt }] }],
   });
 
-  const response = await result.response;
-  const raw = response.text();
+  const raw = result.response.text().trim().replace(/```json|```/g, '');
 
-  const cleaned = raw
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
-
+  let parsed;
   try {
-    const parsed = JSON.parse(cleaned);
-
+    parsed = JSON.parse(raw);
     parsed.questions = parsed.questions.map(q => ({
       ...q,
       topic: q.topic || 'Общая тема',
     }));
-
-    const newTest = await Test.create({
-      owner: userId,
-      originalFileName,
-      title: parsed.title,
-      questions: parsed.questions,
-      difficulty: options.difficulty || 'medium',
-      questionCount: options.questionCount || parsed.questions.length,
-      sourceType: 'file',
-      sourceDetails: originalFileName,
-      testType: options.testType || 'normal',
-    });
-
-    return newTest;
   } catch (err) {
     console.error('Ошибка парсинга JSON:', err.message);
     console.error('Ответ от Gemini:', raw);
     throw new Error('Ответ ИИ не является валидным JSON');
   }
+
+  const newTest = await Test.create({
+    owner: userId,
+    originalFileName: originalFileName || "generated-from-prompt",
+    title: parsed.title,
+    questions: parsed.questions,
+    difficulty: options.difficulty,
+    questionCount: options.questionCount,
+    sourceType: text && userPrompt ? 'file+prompt' : (text ? 'file' : 'prompt'),
+    sourceDetails: userPrompt || originalFileName,
+    testType: options.testType,
+  });
+
+  return newTest;
 }
 
 async function splitTextIntoThemes(text) {
@@ -122,7 +164,6 @@ ${text}
   const cleaned = raw.replace(/```json/g, '').replace(/```/g, '');
   return JSON.parse(cleaned);
 }
-
 
 module.exports = {
   generateSummaryFromText,

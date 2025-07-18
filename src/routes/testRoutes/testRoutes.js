@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const authMiddleware = require('../../middlewares/authMiddleware');
-const { scheduleFileDeletion } = require('../../utils/fileDeletion');
+const {scheduleFileDeletion} = require('../../utils/fileDeletion');
 
 const generationController = require('../../controllers/testController/testGenerationController');
 const resultController = require('../../controllers/testController/testResultController');
@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = 'uploads/';
         if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+            fs.mkdirSync(uploadDir, {recursive: true});
         }
         cb(null, uploadDir);
     },
@@ -27,19 +27,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+    limits: {fileSize: 100 * 1024 * 1024}, // 100 MB
 });
 
 /**
  * @swagger
  * /api/test/generate-test:
  *   post:
- *     summary: Генерация теста из файла
+ *     summary: Генерация теста из файла, промпта или их комбинации
  *     tags: [Test]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         multipart/form-data:
  *           schema:
@@ -47,19 +47,31 @@ const upload = multer({
  *             properties:
  *               difficulty:
  *                 type: string
+ *                 example: medium
  *               questionCount:
  *                 type: integer
+ *                 example: 5
+ *               userPrompt:
+ *                 type: string
+ *                 example: "Сделай тест по теме 'Физика: законы Ньютона' на 7 вопросов, сложность высокая"
  *               file:
  *                 type: string
  *                 format: binary
  *     responses:
- *       200:
- *         description: Тест успешно сгенерирован
+ *   200:
+ *     description: Тест успешно сгенерирован
+ *   400:
+ *     description: "Ошибка: нужен файл или userPrompt"
+ *   500:
+ *     description: "Ошибка генерации теста"
  */
+
 router.post('/generate-test', authMiddleware, upload.single('file'), async (req, res, next) => {
     try {
         await generationController.generateTest(req, res);
-        scheduleFileDeletion(req.file.filename);
+        if (req.file) {
+            scheduleFileDeletion(req.file.filename);
+        }
     } catch (err) {
         next(err);
     }
