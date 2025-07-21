@@ -44,3 +44,24 @@ exports.getTestResult = async (req, res) => {
         res.status(500).json({ message: 'Ошибка получения результата теста' });
     }
 };
+
+exports.deleteTest = async (req, res) => {
+    try {
+        const testId = req.params.id;
+        const userId = req.user._id;
+
+        const deletedTest = await Test.findOneAndDelete({ _id: testId, owner: userId });
+
+        if (!deletedTest) {
+            return res.status(404).json({ message: 'Тест не найден или у вас нет прав на его удаление' });
+        }
+
+        res.status(200).json({
+            message: 'Тест успешно удалён',
+            deletedTestId: testId
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Ошибка при удалении теста' });
+    }
+};

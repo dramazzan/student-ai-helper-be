@@ -34,4 +34,15 @@ async function getTestResult(testResultId, userId) {
     };
 }
 
-module.exports = { getTestResult };
+async function deleteTestById(testId, userId) {
+    const test = await Test.findOneAndDelete({ _id: testId, owner: userId });
+
+    if (!test) {
+        throw new Error('Тест не найден или вы не имеете прав на его удаление.');
+    }
+
+    return { message: 'Тест успешно удалён.', deletedTestId: testId };
+}
+
+
+module.exports = { getTestResult, deleteTestById };

@@ -215,4 +215,31 @@ router.get('/module', authMiddleware, moduleController.getTestModules);
  */
 router.get('/:id', authMiddleware, listController.getTestByIdController);
 
+
+/**
+ * @swagger
+ * /api/test/{id}:
+ *   delete:
+ *     summary: Удалить тест по ID
+ *     tags: [Test]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID теста для удаления
+ *     responses:
+ *       200:
+ *         description: Тест успешно удалён
+ *       404:
+ *         description: Тест не найден или нет доступа
+ *       500:
+ *         description: Ошибка при удалении теста
+ */
+router.delete('/delete/:id', authMiddleware, resultController.deleteTest);
+
+
 module.exports = router;
