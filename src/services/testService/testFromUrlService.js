@@ -21,31 +21,55 @@ async function extractTextFromUrlWithUnstructured(url) {
 
         // 3. Отправляем в Unstructured
         const form = new FormData();
-        form.append('file', fs.createReadStream(tempPath));
+        form.append('files', fs.createReadStream(tempPath)); // Изменено с 'file' на 'files'
         form.append('strategy', 'fast');
+        form.append('output_format', 'application/json'); // Добавлен параметр
 
-        const parsed = await axios.post('http://localhost:8000/parse', form, {
-            headers: form.getHeaders(),
+        const parsed = await axios.post('http://unstructured:8000/general/v0/general', form, {
+            headers: {
+                ...form.getHeaders(),
+                'Accept': 'application/json'
+            },
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
+            timeout: 30000 // Добавлен таймаут
         });
 
         // 4. Удаляем временный файл
         fs.unlinkSync(tempPath);
 
-        const text = parsed.data.text;
+        // 5. ИСПРАВЛЕНО: Обработка ответа от Unstructured
+        const elements = parsed.data;
+
+        console.log('🔍 Ответ от Unstructured:', JSON.stringify(elements, null, 2));
+
+        if (!Array.isArray(elements) || elements.length === 0) {
+            throw new Error('Unstructured вернул пустой массив или неправильный формат');
+        }
+
+        // Извлекаем текст из всех элементов
+        const text = elements
+            .filter(element => element.text && element.text.trim())
+            .map(element => element.text.trim())
+            .join('\n\n');
 
         if (!text || !text.trim()) {
             throw new Error('Unstructured не вернул текст');
         }
 
+        console.log('✅ Извлеченный текст (первые 200 символов):', text.substring(0, 200) + '...');
+
         return text.trim();
     } catch (err) {
+        console.error('❌ Детали ошибки Unstructured:', {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status
+        });
         throw new Error('Ошибка при обработке URL через Unstructured: ' + err.message);
     }
 }
 
-// 🧠 Основной сервис генерации теста из URL
 // 🧠 Основной сервис генерации теста из URL
 async function generateTestFromURL(url, userId, originalURL, options = {}) {
     const text = await extractTextFromUrlWithUnstructured(url);
@@ -154,6 +178,7 @@ ${text}
         throw new Error('Ответ ИИ не является валидным JSON');
     }
 }
+
 module.exports = {
     generateTestFromURL,
 };

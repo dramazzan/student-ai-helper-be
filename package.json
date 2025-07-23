@@ -1,14 +1,15 @@
 {
   "name": "student-ai-helper",
   "version": "1.0.0",
-  "description": "this project for narxoz practice with using AI",
+  "description": "this project for Narxoz practice with using AI",
   "license": "ISC",
   "author": "",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
